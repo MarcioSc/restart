@@ -1,35 +1,26 @@
 <?php
 
 
-   require_once("funcoes.php");
-   //date_default_timezone_set('America/Sao_Paulo'); 
+   require_once("classes/db.class.php");
+   //date_default_timezone_set('America/Bahia'); 
    
 
-   if ((isset($_POST["cod_membro"])) && ($_POST["cod_membro"]!='')){
- 
-	  $cod=$_POST["cod_membro"];
-	  $dataatual=date(time());
-	  $data=date('d/m/Y H:i:s',$dataatual-4*3600);
-	  $limite= explode("-",$_POST["data_limite"]);
-	  
-	  
-	  
-	  $chave=conectar_banco();
+     $chave=conectaDB();
 	 if ($chave!==FALSE){
-		$sql="SELECT Evento.Nome as E_nome, Membro.Nome as M_Nome, Hora, DataEvento, Tipo FROM Evento, Membro, Membro_has_Evento WHERE Evento.idEvento= Membro_has_Evento.Evento_idEvento AND Membro.idMembro=Membro_has_Evento.Membro_idMembro AND Membro.idMembro=".$cod." AND DataEvento <= ".mktime(00,00,00,$limite[1],$limite[2],$limite[0])." AND DataEvento >= ".time(). ";";
+		$sql="SELECT * FROM patrimonio WHERE situacao = 1 ";
 		$res=mysql_query($sql,$chave);
-		
+		  
 		if ($res===FALSE){
-			echo"<h3 align='center'>Evento não encontrado!</h3><a href='listar_eventos.php'><input type='button' value='Voltar' /></a>
+			echo"<h3 align='center'>Não há patrimônios ativos!</h3><a href='relatorio.php'><input type='button' value='Voltar' /></a>
 <hr />";
 		}else{
 			$tabela='';
-			while($evento=mysql_fetch_assoc($res)){
-					$tabela.="<tr> <td>".$evento["E_nome"]."</td><td>".$evento["Tipo"]."</td><td>".date('d/m/Y', $evento["DataEvento"])."</td><td>".date('H:i',$evento["Hora"])."</td></tr>";
-					$nome_membro=$evento["M_Nome"];
+			while($patrimonio=mysql_fetch_assoc($res)){
+					$tabela.="<tr> <td>".$patrimonio["num_patrimonio"]."</td><td>".$patrimonio["tipo"]."</td><td>".$patrimonio["num_posicionamento"]."</td><td>".$patrimonio["situacao"]."</td></tr>";
+					
 			}
 		}
-	 }
+	 
 	  $relatorio='
 <html>
 <head>
@@ -186,41 +177,16 @@
     </style>
 </head>
 <body>
-<hr>
-
-        <h2 align="center">Paróquia Santa Lúcia</h2>
-
-<p align="right">'.$data.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
-<hr>
-<b><h2 align="center">Relatório de Eventos Personalizado</h2></b>
 <hr>';
 
- if(!isset($nome_membro)){
-	 $relatorio.='<h3 align="center"> O membro selecionado não possui eventos nesse período</h3>
-	 <htmlpagefooter name="footer">
-<hr />
-<div id="footer"> 
-    <table>
-        <tr><td>Paróquia Santa Lúcia</td></tr>
-    </table>
-</div>
-</htmlpagefooter>
-<sethtmlpagefooter name="footer" value="on" />
-</body>
-</html>'; 
- }else{ 
+ 
     $relatorio.='
- <table align="center">
- <tr>
- <td>Membro: </td> <td>'.$nome_membro.'</td>
- </tr>
- </table>
  
   <br>
-  <br> 
+  
  <table align="center">
  <tr>
- <th>Nome do Evento </th> <th>Tipo</th> <th>Data</th> <th>Hora</th>
+ <th>Número do patrimônio </th> <th>Tipo</th> <th>Número de posicionamento</th> <th>Situação</th>
  </tr>
  '.$tabela.'
   </table>
@@ -230,7 +196,7 @@
 <hr />
 <div id="footer"> 
     <table>
-        <tr><td>Paróquia Santa Lúcia</td></tr>
+        <tr><td>Restart</td></tr>
     </table>
 </div>
 </htmlpagefooter>
@@ -240,7 +206,7 @@
 
 ';
 	  
- }
+ 
   include('MPDF57/mpdf.php');
   $mpdf=new mPDF('c','A4','','' , 0 , 0 , 0 , 0 , 0 , 0); 
  
@@ -262,7 +228,7 @@ $mpdf->list_indent_first_level = 0;
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Paróquia Santa Lúcia</title>
 <hr />
-<b><h2 align="center">Gerar Relatório de Eventos Personalizado</h2></b>
+<b><h2 align="center">Gerar Relatório de Patrimônios Ativos</h2></b>
 <hr />
 </head>
 
@@ -270,35 +236,12 @@ $mpdf->list_indent_first_level = 0;
 <body>
 <form action="relatorio.php" method="post">
 
-Selecionar Membro
 
-<select name='cod_membro'>
-<?php
-require_once("funcoes.php"); 
-	$chave=conectar_banco();
-	 if ($chave!==FALSE){
-		$sql="SELECT idMembro, Nome, Email FROM Membro WHERE 2=2";
-		$res=mysql_query($sql,$chave);
-		if ($res===FALSE){
-			echo"<h3 align='center'>Membro não encontrado!</h3>";
-		}else{
-			while($var=mysql_fetch_assoc($res)){
-				$membros[]=$var;
-				}
-			foreach($membros as $indice=>$linha){
-				echo "<option value='".$linha["idMembro"]."'>".$linha["Nome"]."<option>";
-			}
-		}
-	 }else{
-		echo"<h3 align='center'>Membro não encontrado!</h3>";	
-	 }
-?>
-</select><br /><br />
-Do dia atual até: <br />
- <input type="date" name='data_limite'>
  <input type="submit" value="Gerar" />
  <hr />
- <a href="principal.php"><input type="button" value="Voltar" /></a>
+ <a href="painel.php">
+ <input type="button" value="Voltar" /></a>
+ </form>
  
 </body>
 </html>
