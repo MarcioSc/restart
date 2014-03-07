@@ -15,10 +15,11 @@ CREATE TABLE IF NOT EXISTS `restart`.`Usuario` (
   `email` VARCHAR(45) NULL,
   `senha` VARCHAR(45) NOT NULL,
   `tipo_usuario` SMALLINT NOT NULL,
-  `data_cadastro` DATE NOT NULL,
-  `data_atualizacao` DATE NULL,
+  `data_cadastro` TIMESTAMP NOT NULL,
+  `data_atualizacao` TIMESTAMP NULL,
   `telefone_residencial` VARCHAR(15) NULL,
   `telefone_celular` VARCHAR(15) NULL,
+  `situacao` SMALLINT NOT NULL,
   PRIMARY KEY (`matricula`))
 ENGINE = InnoDB;
 
@@ -28,43 +29,18 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `restart`.`Laboratorio` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `nome_laboratorio` VARCHAR(14) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `restart`.`Categoria`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `restart`.`Categoria` (
+  `id` INT NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(45) NOT NULL,
-  `qtd_bens` INT NOT NULL,
   PRIMARY KEY (`id`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `restart`.`Imagem_HD`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `restart`.`Imagem_HD` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `nome_arquivo` VARCHAR(60) NOT NULL,
-  `data_criacao` DATE NOT NULL,
-  `data_atualizacao` DATE NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `restart`.`Configuracao`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `restart`.`Configuracao` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `fabricante` VARCHAR(45) NOT NULL,
-  `modelo_equipamento` VARCHAR(45) NOT NULL,
-  `modelo_processador` VARCHAR(45) NULL,
-  `capacidade_ram` VARCHAR(20) NULL,
-  `capacidade_hd` VARCHAR(20) NULL,
-  `vencimento_garantia` DATE NOT NULL,
-  `Imagem_HD_id` INT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_Configuracao_Imagem_HD1_idx` (`Imagem_HD_id` ASC),
-  CONSTRAINT `fk_Configuracao_Imagem_HD1`
-    FOREIGN KEY (`Imagem_HD_id`)
-    REFERENCES `restart`.`Imagem_HD` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
@@ -72,25 +48,24 @@ ENGINE = InnoDB;
 -- Table `restart`.`Patrimonio`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `restart`.`Patrimonio` (
-  `num_patrimonio` INT NOT NULL AUTO_INCREMENT,
-  `tipo` SMALLINT NOT NULL,
-  `num_posicionamento` INT NOT NULL,
+  `num_patrimonio` VARCHAR(45) NOT NULL,
+  `num_posicionamento` SMALLINT NOT NULL,
   `situacao` SMALLINT NOT NULL,
-  `data_cadastro` DATE NOT NULL,
-  `data_atualizacao` DATE NULL,
+  `data_cadastro` TIMESTAMP NOT NULL,
+  `data_atualizacao` TIMESTAMP NULL,
   `Laboratorio_id` INT NOT NULL,
-  `Configuracao_id` INT NOT NULL,
+  `Categoria_id` INT NOT NULL,
   PRIMARY KEY (`num_patrimonio`),
   INDEX `fk_Patrimonio_Laboratorio1_idx` (`Laboratorio_id` ASC),
-  INDEX `fk_Patrimonio_Configuracao1_idx` (`Configuracao_id` ASC),
+  INDEX `fk_Patrimonio_Categoria1_idx` (`Categoria_id` ASC),
   CONSTRAINT `fk_Patrimonio_Laboratorio1`
     FOREIGN KEY (`Laboratorio_id`)
     REFERENCES `restart`.`Laboratorio` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Patrimonio_Configuracao1`
-    FOREIGN KEY (`Configuracao_id`)
-    REFERENCES `restart`.`Configuracao` (`id`)
+  CONSTRAINT `fk_Patrimonio_Categoria1`
+    FOREIGN KEY (`Categoria_id`)
+    REFERENCES `restart`.`Categoria` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -101,12 +76,15 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `restart`.`Ocorrencia` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `descricao` VARCHAR(45) NOT NULL,
+  `descricao` VARCHAR(350) NOT NULL,
   `estado_servico` SMALLINT NOT NULL,
-  `data_ocorrencia` DATE NOT NULL,
-  `data_previa` DATE NULL,
-  `data_entrega` DATE NULL,
-  `Patrimonio_num_patrimonio` INT NOT NULL,
+  `data_cadastro` TIMESTAMP NOT NULL,
+  `data_previa` TIMESTAMP NULL,
+  `data_entrega` TIMESTAMP NULL,
+  `data_atualizacao` TIMESTAMP NULL,
+  `data_atendimento` TIMESTAMP NULL,
+  `bolsista_alocado` VARCHAR(16) NULL,
+  `Patrimonio_num_patrimonio` VARCHAR(45) NOT NULL,
   `Usuario_matricula` VARCHAR(16) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_Chamado_Patrimonio1_idx` (`Patrimonio_num_patrimonio` ASC),
@@ -158,6 +136,46 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `restart`.`Imagem_HD`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `restart`.`Imagem_HD` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nome_arquivo` VARCHAR(60) NOT NULL,
+  `data_criacao` TIMESTAMP NOT NULL,
+  `data_atualizacao` TIMESTAMP NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `restart`.`Equipamento`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `restart`.`Equipamento` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `modelo` VARCHAR(45) NOT NULL,
+  `modelo_processador` VARCHAR(45) NULL,
+  `capacidade_ram` VARCHAR(20) NULL,
+  `capacidade_hd` VARCHAR(20) NULL,
+  `vencimento_garantia` TIMESTAMP NOT NULL,
+  `Imagem_HD_id` INT NULL,
+  `Categoria_id` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_Configuracao_Imagem_HD1_idx` (`Imagem_HD_id` ASC),
+  INDEX `fk_Equipamento_Categoria1_idx` (`Categoria_id` ASC),
+  CONSTRAINT `fk_Configuracao_Imagem_HD1`
+    FOREIGN KEY (`Imagem_HD_id`)
+    REFERENCES `restart`.`Imagem_HD` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Equipamento_Categoria1`
+    FOREIGN KEY (`Categoria_id`)
+    REFERENCES `restart`.`Categoria` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `restart`.`Software`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `restart`.`Software` (
@@ -197,9 +215,9 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `restart`.`Licenca` (
   `Software_id` INT NOT NULL,
-  `Patrimonio_num_patrimonio` INT NOT NULL,
+  `Patrimonio_num_patrimonio` VARCHAR(45) NOT NULL,
   `codigo_licenca` VARCHAR(45) NULL,
-  `data_expiracao` DATE NULL,
+  `data_expiracao` TIMESTAMP NULL,
   PRIMARY KEY (`Software_id`, `Patrimonio_num_patrimonio`),
   INDEX `fk_Software_has_Patrimonio_Patrimonio1_idx` (`Patrimonio_num_patrimonio` ASC),
   INDEX `fk_Software_has_Patrimonio_Software1_idx` (`Software_id` ASC),
@@ -213,6 +231,23 @@ CREATE TABLE IF NOT EXISTS `restart`.`Licenca` (
     REFERENCES `restart`.`Patrimonio` (`num_patrimonio`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `restart`.`Configuracao`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `restart`.`Configuracao` (
+  `nome_db` VARCHAR(45) NOT NULL,
+  `servidor_smtp` VARCHAR(45) NOT NULL,
+  `porta_smtp` INT NOT NULL,
+  `email_smtp` VARCHAR(45) NOT NULL,
+  `usuario_smtp` VARCHAR(45) NOT NULL,
+  `senha_smtp` VARCHAR(45) NOT NULL,
+  `seguranca_smtp` CHAR(3) NOT NULL,
+  `servidor_db` VARCHAR(45) NOT NULL,
+  `usuario_db` VARCHAR(45) NOT NULL,
+  `senha_db` VARCHAR(45) NULL)
 ENGINE = InnoDB;
 
 
